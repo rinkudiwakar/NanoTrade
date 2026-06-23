@@ -5,7 +5,7 @@ const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000/ws/market';
 
 export function useWebSocket() {
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   const setPriceUsd = useMarketStore((state) => state.setPriceUsd);
   const setOrderbook = useMarketStore((state) => state.setOrderbook);
