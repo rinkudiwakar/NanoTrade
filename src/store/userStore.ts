@@ -45,7 +45,10 @@ export const useUserStore = create<UserState>((set, get) => ({
     if (!get().session) return;
     try {
       const { data } = await api.get('/portfolio');
-      set({ balance: data.balance, holdings: data.holdings });
+      set({ 
+        balance: data?.balance || 0, 
+        holdings: Array.isArray(data?.holdings) ? data.holdings : [] 
+      });
     } catch (error) {
       console.error("Failed to fetch portfolio", error);
     }
@@ -55,7 +58,9 @@ export const useUserStore = create<UserState>((set, get) => ({
     if (!get().session) return;
     try {
       const { data } = await api.get('/orders/history');
-      set({ orders: data });
+      // Backend might return an array directly, or an object like { orders: [...] }
+      const ordersArray = Array.isArray(data) ? data : (data?.orders || []);
+      set({ orders: Array.isArray(ordersArray) ? ordersArray : [] });
     } catch (error) {
       console.error("Failed to fetch orders history", error);
     }
