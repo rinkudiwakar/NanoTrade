@@ -3,7 +3,6 @@ import { useMarketStore } from '@/store/marketStore';
 
 export const TradeFeed = React.memo(() => {
   const trades = useMarketStore((state) => state.recentTrades);
-  const conversionRate = useMarketStore((state) => state.conversionRate);
 
   return (
     <div className="flex h-full flex-col bg-card text-xs font-mono">

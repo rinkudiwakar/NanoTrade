@@ -29,7 +29,7 @@ export function OrderForm() {
         quantity: parseFloat(quantity),
         price: type === 'LIMIT' ? parseFloat(price) : currentPriceInr,
       };
-      const res = await api.post('/orders', payload);
+      await api.post('/orders', payload);
       toast.success('Order placed successfully!', {
         description: `Your ${side} order for ${quantity} ${baseCurrency} was executed.`,
       });
