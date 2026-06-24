@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useMarketStore } from '@/store/marketStore';
+import { useUserStore } from '@/store/userStore';
 import { api } from '@/services/api';
 import { toast } from 'sonner';
 
@@ -16,6 +17,7 @@ export function OrderForm() {
 
   const currentPriceInr = priceUsd * conversionRate;
   const baseCurrency = currentSymbol.split('_')[0];
+  const { fetchPortfolio, fetchOrders } = useUserStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +49,10 @@ export function OrderForm() {
       });
       setQuantity('');
       if (type === 'LIMIT') setPrice('');
+      
+      // Instantly refresh margin and orders list
+      fetchPortfolio();
+      fetchOrders();
     } catch (error: any) {
       const msg =
         error.response?.data?.error ||
