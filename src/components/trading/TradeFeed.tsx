@@ -18,7 +18,7 @@ export const TradeFeed = React.memo(() => {
       <div className="flex-1 overflow-auto">
         {trades.map((trade, i) => {
           const priceInr = trade.price * conversionRate;
-          const isBuy = trade.side.toUpperCase() === 'BUY';
+          const isBuy = (trade.side || 'BUY').toUpperCase() === 'BUY';
           const time = new Date(trade.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second:'2-digit' });
           
           return (
