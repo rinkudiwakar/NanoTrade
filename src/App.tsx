@@ -19,7 +19,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="dark h-full w-full">
+      <div className="h-full w-full">
         <Toaster theme="dark" position="bottom-right" richColors />
         <Routes>
           <Route 

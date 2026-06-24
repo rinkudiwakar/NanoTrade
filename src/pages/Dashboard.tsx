@@ -23,7 +23,7 @@ export function Dashboard() {
         </p>
       </div>
 
-      <div className="hidden lg:flex h-screen w-full flex-col bg-background text-foreground overflow-hidden dark">
+      <div className="hidden lg:flex h-screen w-full flex-col bg-background text-foreground overflow-hidden">
       <PriceTicker />
       
       {/* Main Grid Layout */}
