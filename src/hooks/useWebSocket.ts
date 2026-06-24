@@ -37,9 +37,33 @@ export function useWebSocket() {
           } else if (data.type === 'orderbook_update' || data.event === 'orderbook_update' || data.type === 'orderbook') {
             const ob = data.orderbook || data.data || data;
             if (ob && ob.bids) setOrderbook(ob.bids, ob.asks);
-          } else if (data.type === 'trade_execution' || data.event === 'trade_execution' || data.type === 'trade' || data.type === 'market_trade') {
-            const trade = data.trade || data.data || data;
-            if (trade) addTrades(Array.isArray(trade) ? trade : [trade]);
+          } else if (data.type === 'trade_execution' || data.event === 'trade_execution' || data.type === 'trade') {
+            const raw = data.trade || data.data || data;
+            if (raw && raw.price) {
+              const rate = useMarketStore.getState().conversionRate || 90;
+              const trade = {
+                id: raw.id || raw.order_id || `${Date.now()}-${Math.random()}`,
+                price: raw.price * rate, // convert USD→INR
+                quantity: raw.quantity,
+                side: raw.side || 'BUY',
+                timestamp: raw.timestamp || raw.ts || Date.now(),
+              };
+              addTrades([trade]);
+            }
+          } else if (data.type === 'market_trade') {
+            // market:trades channel — price is in USD from Binance
+            const raw = data.data || data;
+            if (raw && raw.price) {
+              const rate = useMarketStore.getState().conversionRate || 90;
+              const trade = {
+                id: `binance-${raw.ts || Date.now()}-${Math.random()}`,
+                price: raw.price * rate, // convert USD→INR
+                quantity: raw.quantity,
+                side: raw.side || 'BUY',
+                timestamp: raw.ts || Date.now(),
+              };
+              addTrades([trade]);
+            }
           } else if (data.type === 'kline') {
             const kline = data.data;
             if (kline && kline.start) {
