@@ -11,7 +11,7 @@ type CandleData = {
 };
 
 // Fetch last 200 1-minute candles from Binance US for seeding the chart
-async function fetchHistoricalCandles(): Promise<CandleData[]> {
+async function fetchHistoricalCandles(conversionRate: number): Promise<CandleData[]> {
   try {
     const resp = await fetch(
       'https://api.binance.us/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=200'
@@ -20,10 +20,10 @@ async function fetchHistoricalCandles(): Promise<CandleData[]> {
     const raw: [number, string, string, string, string][] = await resp.json();
     return raw.map(([t, o, h, l, c]) => ({
       time: Math.floor(t / 1000) as UTCTimestamp,
-      open: parseFloat(o),
-      high: parseFloat(h),
-      low: parseFloat(l),
-      close: parseFloat(c),
+      open: parseFloat(o) * conversionRate,
+      high: parseFloat(h) * conversionRate,
+      low: parseFloat(l) * conversionRate,
+      close: parseFloat(c) * conversionRate,
     }));
   } catch {
     return [];
@@ -36,6 +36,7 @@ export function ChartContainer() {
   const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
 
   const currentSymbol = useMarketStore((state) => state.currentSymbol);
+  const conversionRate = useMarketStore((state) => state.conversionRate);
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -75,8 +76,9 @@ export function ChartContainer() {
     chartRef.current = chart;
     seriesRef.current = candlestickSeries;
 
-    // Seed chart with historical candles immediately
-    fetchHistoricalCandles().then((candles) => {
+    // Seed chart with historical candles (converted to INR) immediately
+    const rate = conversionRate > 1 ? conversionRate : useMarketStore.getState().conversionRate || 90;
+    fetchHistoricalCandles(rate).then((candles) => {
       if (candles.length > 0 && seriesRef.current) {
         seriesRef.current.setData(candles);
         chart.timeScale().fitContent();

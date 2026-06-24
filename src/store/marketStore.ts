@@ -59,12 +59,19 @@ export const useMarketStore = create<MarketState>((set) => ({
     
     const last = existing[existing.length - 1];
     if (last.time === candle.time) {
-      existing[existing.length - 1] = candle;
+      // Proper OHLC merge: preserve open, expand high/low, always update close
+      existing[existing.length - 1] = {
+        ...last,
+        high: Math.max(last.high, candle.high),
+        low: Math.min(last.low, candle.low),
+        close: candle.close,
+        volume: last.volume + (candle.volume || 0),
+      };
     } else if (candle.time > last.time) {
-      existing.push(candle);
+      // New 1m bar: open = prev close for continuity
+      existing.push({ ...candle, open: last.close });
     }
     
-    // Keep max 1000 candles to avoid memory leaks
     if (existing.length > 1000) existing.shift();
     return { candles: existing };
   })

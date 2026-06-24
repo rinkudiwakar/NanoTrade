@@ -55,25 +55,39 @@ export function useWebSocket() {
             const raw = data.data || data;
             if (raw && raw.price) {
               const rate = useMarketStore.getState().conversionRate || 90;
+              const priceInr = raw.price * rate;
+              const tradeTs = raw.ts || Date.now();
               const trade = {
-                id: `binance-${raw.ts || Date.now()}-${Math.random()}`,
-                price: raw.price * rate, // convert USD→INR
+                id: `binance-${tradeTs}-${Math.random()}`,
+                price: priceInr,
                 quantity: raw.quantity,
                 side: raw.side || 'BUY',
-                timestamp: raw.ts || Date.now(),
+                timestamp: tradeTs,
               };
               addTrades([trade]);
+              // ── Feed trade into live 1m candle (makes chart tick with every trade) ──
+              const candleTime = Math.floor(tradeTs / 60000) * 60;
+              useMarketStore.getState().updateCandle({
+                time: candleTime,
+                open: priceInr,
+                high: priceInr,
+                low: priceInr,
+                close: priceInr,
+                volume: raw.quantity || 0,
+              });
             }
           } else if (data.type === 'kline') {
+            // kline from Binance is in USD — convert to INR
             const kline = data.data;
             if (kline && kline.start) {
+              const rate = useMarketStore.getState().conversionRate || 90;
               useMarketStore.getState().updateCandle({
-                time: Math.floor(kline.start / 1000), // convert ms to s
-                open: kline.open,
-                high: kline.high,
-                low: kline.low,
-                close: kline.close,
-                volume: kline.volume
+                time: Math.floor(kline.start / 1000),
+                open: kline.open * rate,
+                high: kline.high * rate,
+                low: kline.low * rate,
+                close: kline.close * rate,
+                volume: kline.volume,
               });
             }
           }
