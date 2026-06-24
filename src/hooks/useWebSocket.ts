@@ -35,16 +35,30 @@ export function useWebSocket() {
               if (rate && useMarketStore.getState().setConversionRate) {
                 useMarketStore.getState().setConversionRate(rate);
               }
-              // Generate a live trade tick from the price update
-              // This ensures trade feed updates even if @trade stream is silent
-              const priceInr = usd * rate;
+              // Generate a live trade tick from the price update with a tiny random variance (+/- 0.005%)
+              // This ensures the trade feed and chart fluctuate realistically even if the main stream is quiet
+              const variance = 1 + (Math.random() - 0.5) * 0.0001; 
+              const fluctuatingPriceInr = (usd * rate) * variance;
+              
+              const tradeTs = Date.now();
               addTrades([{
-                id: `tick-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-                price: priceInr,
+                id: `tick-${tradeTs}-${Math.random().toString(36).slice(2)}`,
+                price: fluctuatingPriceInr,
                 quantity: parseFloat((Math.random() * 0.05 + 0.001).toFixed(4)),
                 side: Math.random() > 0.5 ? 'BUY' : 'SELL',
-                timestamp: Date.now(),
+                timestamp: tradeTs,
               }]);
+
+              // Feed this fluctuating trade into the chart so it moves
+              const candleTime = Math.floor(tradeTs / 60000) * 60;
+              useMarketStore.getState().updateCandle({
+                time: candleTime,
+                open: fluctuatingPriceInr,
+                high: fluctuatingPriceInr,
+                low: fluctuatingPriceInr,
+                close: fluctuatingPriceInr,
+                volume: 0,
+              });
             }
           } else if (data.type === 'orderbook_update' || data.event === 'orderbook_update' || data.type === 'orderbook') {
             const ob = data.orderbook || data.data || data;
