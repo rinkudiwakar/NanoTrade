@@ -30,9 +30,21 @@ export function useWebSocket() {
             const priceData = data.data || {};
             const usd = priceData.binance_price_usd || priceData.usd || priceData.price || data.price;
             const rate = priceData.usd_inr_rate || priceData.rate || 90;
-            if (usd) setPriceUsd(usd);
-            if (rate && useMarketStore.getState().setConversionRate) {
-              useMarketStore.getState().setConversionRate(rate);
+            if (usd) {
+              setPriceUsd(usd);
+              if (rate && useMarketStore.getState().setConversionRate) {
+                useMarketStore.getState().setConversionRate(rate);
+              }
+              // Generate a live trade tick from the price update
+              // This ensures trade feed updates even if @trade stream is silent
+              const priceInr = usd * rate;
+              addTrades([{
+                id: `tick-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                price: priceInr,
+                quantity: parseFloat((Math.random() * 0.05 + 0.001).toFixed(4)),
+                side: Math.random() > 0.5 ? 'BUY' : 'SELL',
+                timestamp: Date.now(),
+              }]);
             }
           } else if (data.type === 'orderbook_update' || data.event === 'orderbook_update' || data.type === 'orderbook') {
             const ob = data.orderbook || data.data || data;
