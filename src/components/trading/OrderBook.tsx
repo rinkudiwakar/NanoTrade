@@ -29,7 +29,7 @@ export const OrderBook = React.memo(() => {
       {/* Asks (Red) */}
       <div className="flex flex-1 flex-col justify-end overflow-hidden">
         {displayAsks.map((ask, i) => {
-          const priceInr = ask.price * conversionRate;
+          const priceInr = ask.price;
           const depthPct = (ask.quantity / maxVolume) * 100;
           return (
             <div key={`ask-${i}`} className="relative flex justify-between px-3 py-0.5 hover:bg-accent/50 cursor-pointer">
@@ -49,7 +49,7 @@ export const OrderBook = React.memo(() => {
       {/* Bids (Green) */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {displayBids.map((bid, i) => {
-          const priceInr = bid.price * conversionRate;
+          const priceInr = bid.price;
           const depthPct = (bid.quantity / maxVolume) * 100;
           return (
             <div key={`bid-${i}`} className="relative flex justify-between px-3 py-0.5 hover:bg-accent/50 cursor-pointer">
