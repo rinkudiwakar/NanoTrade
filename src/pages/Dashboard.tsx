@@ -42,7 +42,7 @@ export function Dashboard() {
               <ChartContainer />
             </div>
           </div>
-          <div className="h-[300px] bg-card">
+          <div className="h-[300px] shrink-0 bg-card border-t border-border">
             <PortfolioTabs />
           </div>
         </div>
@@ -52,10 +52,10 @@ export function Dashboard() {
           <div className="flex-1 overflow-hidden">
             <OrderBook />
           </div>
-          <div className="h-[250px] border-t border-border">
+          <div className="h-[250px] shrink-0 border-t border-border">
             <TradeFeed />
           </div>
-          <div className="h-[350px] border-t border-border">
+          <div className="h-[350px] shrink-0 border-t border-border">
             <OrderForm />
           </div>
         </div>
