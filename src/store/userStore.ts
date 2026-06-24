@@ -4,7 +4,7 @@ import { api } from '@/services/api';
 import type { Session } from '@supabase/supabase-js';
 
 interface Holding {
-  symbol: string;
+  asset: string;
   quantity: number;
 }
 

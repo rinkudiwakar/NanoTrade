@@ -47,9 +47,9 @@ export function PortfolioTabs() {
                 {orders.map(order => (
                   <tr key={order.id} className="border-b border-border/50 hover:bg-accent/50 transition-colors">
                     <td className="py-2 pl-4">{new Date(order.created_at).toLocaleTimeString()}</td>
-                    <td className="py-2 font-medium">{order.symbol}</td>
+                    <td className="py-2 font-medium">BTC_INR</td>
                     <td className={`py-2 font-medium ${order.side === 'BUY' ? 'text-green-500' : 'text-red-500'}`}>{order.side}</td>
-                    <td className="py-2">{order.type}</td>
+                    <td className="py-2">LIMIT</td>
                     <td className="py-2">₹{order.price.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
                     <td className="py-2">{order.quantity}</td>
                     <td className="py-2 pr-4 text-right">
@@ -89,7 +89,7 @@ export function PortfolioTabs() {
               <tbody>
                 {holdings.map((h, i) => (
                   <tr key={i} className="border-b border-border/50 hover:bg-accent/50 transition-colors">
-                    <td className="py-3 pl-4 font-medium">{h.symbol}</td>
+                    <td className="py-3 pl-4 font-medium">{h.asset}</td>
                     <td className="py-3 pr-4 text-right">{h.quantity}</td>
                   </tr>
                 ))}
