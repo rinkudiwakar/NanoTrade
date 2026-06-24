@@ -18,7 +18,13 @@ export const TradeFeed = React.memo(() => {
         {trades.map((trade, i) => {
           const priceInr = trade.price;
           const isBuy = (trade.side || 'BUY').toUpperCase() === 'BUY';
-          const time = new Date(trade.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second:'2-digit' });
+          const ts = trade.timestamp;
+          const dateObj = ts
+            ? new Date(typeof ts === 'number' ? ts : isNaN(Number(ts)) ? ts : Number(ts))
+            : new Date();
+          const time = isNaN(dateObj.getTime())
+            ? '--:--:--'
+            : dateObj.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
           
           return (
             <div key={trade.id || i} className="flex justify-between px-3 py-[2px] hover:bg-accent/50 cursor-pointer">

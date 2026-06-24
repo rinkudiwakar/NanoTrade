@@ -10,7 +10,7 @@ export interface Trade {
   price: number;
   quantity: number;
   side: string;
-  timestamp: string;
+  timestamp: number | string;
 }
 
 export interface Candle {
