@@ -89,7 +89,7 @@ export const useMarketStore = create<MarketState>()(
         }),
     }),
     {
-      name: 'nanotrade-market-v1',
+      name: 'nanotrade-market-v2',
       storage: createJSONStorage(() => sessionStorage),
       // Only persist trades and candles — price/orderbook are always live
       partialize: (state) => ({

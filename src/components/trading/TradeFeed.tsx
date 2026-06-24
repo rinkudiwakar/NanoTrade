@@ -25,16 +25,26 @@ async function fetchRecentTrades(conversionRate: number) {
 export const TradeFeed = React.memo(() => {
   const trades = useMarketStore((state) => state.recentTrades);
   const addTrades = useMarketStore((state) => state.addTrades);
-  const conversionRate = useMarketStore((state) => state.conversionRate);
 
-  // Seed from REST API on mount so trades are instantly visible
+
+  // Seed from REST API on mount if empty, otherwise use persisted trades
   useEffect(() => {
-    const rate = conversionRate > 1 ? conversionRate : useMarketStore.getState().conversionRate || 90;
-    fetchRecentTrades(rate).then((seeded) => {
-      if (seeded.length > 0) {
-        addTrades(seeded);
-      }
-    });
+    if (useMarketStore.getState().recentTrades.length > 0) return;
+
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    fetch(`${apiUrl}/api/v1/market/price`)
+      .then((r) => r.json())
+      .then((data) => {
+        const rate = data.usd_inr_rate || 90;
+        useMarketStore.getState().setConversionRate(rate);
+        return fetchRecentTrades(rate);
+      })
+      .then((seeded) => {
+        if (seeded.length > 0) {
+          addTrades(seeded);
+        }
+      })
+      .catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // only on mount
 

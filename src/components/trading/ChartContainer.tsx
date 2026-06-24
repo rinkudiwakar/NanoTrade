@@ -8,6 +8,7 @@ type CandleData = {
   high: number;
   low: number;
   close: number;
+  volume: number;
 };
 
 // Fetch last 200 1-minute candles from Binance US for seeding the chart
@@ -17,13 +18,14 @@ async function fetchHistoricalCandles(conversionRate: number): Promise<CandleDat
       'https://api.binance.us/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=200'
     );
     if (!resp.ok) throw new Error('Failed to fetch klines');
-    const raw: [number, string, string, string, string][] = await resp.json();
-    return raw.map(([t, o, h, l, c]) => ({
+    const raw: [number, string, string, string, string, string][] = await resp.json();
+    return raw.map(([t, o, h, l, c, v]) => ({
       time: Math.floor(t / 1000) as UTCTimestamp,
       open: parseFloat(o) * conversionRate,
       high: parseFloat(h) * conversionRate,
       low: parseFloat(l) * conversionRate,
       close: parseFloat(c) * conversionRate,
+      volume: parseFloat(v),
     }));
   } catch {
     return [];
@@ -36,7 +38,6 @@ export function ChartContainer() {
   const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
 
   const currentSymbol = useMarketStore((state) => state.currentSymbol);
-  const conversionRate = useMarketStore((state) => state.conversionRate);
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -76,14 +77,31 @@ export function ChartContainer() {
     chartRef.current = chart;
     seriesRef.current = candlestickSeries;
 
-    // Seed chart with historical candles (converted to INR) immediately
-    const rate = conversionRate > 1 ? conversionRate : useMarketStore.getState().conversionRate || 90;
-    fetchHistoricalCandles(rate).then((candles) => {
-      if (candles.length > 0 && seriesRef.current) {
-        seriesRef.current.setData(candles);
-        chart.timeScale().fitContent();
-      }
-    });
+    // 1. If we have persisted candles, use them immediately
+    const persistedCandles = useMarketStore.getState().candles;
+    if (persistedCandles.length > 0 && seriesRef.current) {
+      seriesRef.current.setData(persistedCandles.map(c => ({ ...c, time: c.time as unknown as UTCTimestamp })));
+      chart.timeScale().fitContent();
+    } else {
+      // 2. Otherwise fetch the real conversion rate from backend, then seed from Binance REST
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      fetch(`${apiUrl}/api/v1/market/price`)
+        .then(r => r.json())
+        .then(data => {
+          const rate = data.usd_inr_rate || 90;
+          useMarketStore.getState().setConversionRate(rate);
+          return fetchHistoricalCandles(rate);
+        })
+        .then((candles) => {
+          if (candles.length > 0 && seriesRef.current) {
+            seriesRef.current.setData(candles);
+            chart.timeScale().fitContent();
+            // Store the seed in state so it gets persisted
+            candles.forEach(c => useMarketStore.getState().updateCandle(c));
+          }
+        })
+        .catch(console.error);
+    }
 
     const handleResize = () => {
       if (!chartContainerRef.current) return;
@@ -97,7 +115,7 @@ export function ChartContainer() {
 
     // Subscribe to live kline updates from WebSocket
     const unsubscribe = useMarketStore.subscribe((state, prevState) => {
-      if (state.candles !== prevState.candles && seriesRef.current) {
+      if (state.candles !== prevState.candles && state.candles.length > 0 && seriesRef.current) {
         const lastCandle = state.candles[state.candles.length - 1];
         if (lastCandle) {
           seriesRef.current.update({ ...lastCandle, time: lastCandle.time as unknown as UTCTimestamp });
