@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, CandlestickSeries, type IChartApi, type ISeriesApi, type UTCTimestamp } from 'lightweight-charts';
 import { useMarketStore } from '@/store/marketStore';
 
@@ -33,11 +33,34 @@ async function fetchHistoricalCandles(conversionRate: number): Promise<CandleDat
 }
 
 export function ChartContainer() {
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const currentSymbol = useMarketStore((state) => state.currentSymbol);
+
+  // Fullscreen event listener
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      wrapperRef.current?.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -133,11 +156,11 @@ export function ChartContainer() {
   }, [currentSymbol]);
 
   return (
-    <div className="h-full w-full flex flex-col" style={{ background: '#0b0e11' }}>
+    <div ref={wrapperRef} className="h-full w-full flex flex-col" style={{ background: '#0b0e11' }}>
       <div className="flex items-center gap-4 px-4 py-2 border-b border-[#1E2329]" style={{ background: '#0b0e11' }}>
         <h2 className="text-base font-bold text-white">{currentSymbol.replace('_', '/')}</h2>
         <div className="text-xs text-[#848E9C]">1m timeframe</div>
-        <div className="ml-auto flex gap-2 text-xs text-[#848E9C]">
+        <div className="ml-auto flex items-center gap-2 text-xs text-[#848E9C]">
           {['1m', '5m', '15m', '1h', '4h', '1D'].map((tf) => (
             <button
               key={tf}
@@ -146,6 +169,18 @@ export function ChartContainer() {
               {tf}
             </button>
           ))}
+          <div className="w-px h-4 bg-[#2B3139] mx-1"></div>
+          <button
+            onClick={toggleFullscreen}
+            className="p-1.5 rounded hover:bg-[#1E2329] hover:text-white transition-colors flex items-center justify-center"
+            title={isFullscreen ? "Exit Fullscreen" : "Expand Chart"}
+          >
+            {isFullscreen ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            )}
+          </button>
         </div>
       </div>
       <div ref={chartContainerRef} className="flex-1 w-full" />
