@@ -28,8 +28,8 @@ export function useWebSocket() {
           
           if (data.type === 'price' || data.event === 'price') {
             const priceData = data.data || {};
-            const usd = priceData.binance_price_usd || priceData.price || data.price;
-            const rate = priceData.usd_inr_rate || 90;
+            const usd = priceData.binance_price_usd || priceData.usd || priceData.price || data.price;
+            const rate = priceData.usd_inr_rate || priceData.rate || 90;
             if (usd) setPriceUsd(usd);
             if (rate && useMarketStore.getState().setConversionRate) {
               useMarketStore.getState().setConversionRate(rate);
