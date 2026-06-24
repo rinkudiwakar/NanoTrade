@@ -24,6 +24,7 @@ export function useWebSocket() {
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          console.log('WS Received:', data);
           
           if (data.type === 'price' || data.event === 'price') {
             const priceData = data.data || {};
