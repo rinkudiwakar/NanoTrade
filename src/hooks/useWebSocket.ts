@@ -25,14 +25,20 @@ export function useWebSocket() {
         try {
           const data = JSON.parse(event.data);
           
-          if (data.type === 'price_update' || data.event === 'price_update') {
-            setPriceUsd(data.price || data.data?.price);
-          } else if (data.type === 'orderbook_update' || data.event === 'orderbook_update') {
-            const ob = data.orderbook || data.data;
-            if (ob) setOrderbook(ob.bids, ob.asks);
-          } else if (data.type === 'trade_execution' || data.event === 'trade_execution') {
-            const trade = data.trade || data.data;
-            if (trade) addTrades([trade]);
+          if (data.type === 'price' || data.event === 'price') {
+            const priceData = data.data || {};
+            const usd = priceData.binance_price_usd || priceData.price || data.price;
+            const rate = priceData.usd_inr_rate || 90;
+            if (usd) setPriceUsd(usd);
+            if (rate && useMarketStore.getState().setConversionRate) {
+              useMarketStore.getState().setConversionRate(rate);
+            }
+          } else if (data.type === 'orderbook_update' || data.event === 'orderbook_update' || data.type === 'orderbook') {
+            const ob = data.orderbook || data.data || data;
+            if (ob && ob.bids) setOrderbook(ob.bids, ob.asks);
+          } else if (data.type === 'trade_execution' || data.event === 'trade_execution' || data.type === 'trade') {
+            const trade = data.trade || data.data || data;
+            if (trade) addTrades(Array.isArray(trade) ? trade : [trade]);
           }
         } catch (error) {
           console.error("Failed to parse WS message", error);

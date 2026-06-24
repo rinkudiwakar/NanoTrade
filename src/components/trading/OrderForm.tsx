@@ -29,8 +29,9 @@ export function OrderForm() {
       };
       const res = await api.post('/orders', payload);
       alert('Order placed: ' + res.data.status);
-    } catch (error) {
-      alert('Failed to place order.');
+    } catch (error: any) {
+      const msg = error.response?.data?.error || 'Failed to place order.';
+      alert('Error: ' + msg);
     }
   };
 
