@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import { Auth } from '@/pages/Auth';
 import { Dashboard } from '@/pages/Dashboard';
 import { LandingPage } from '@/pages/LandingPage';
@@ -18,7 +19,8 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="dark">
+      <div className="dark h-full w-full">
+        <Toaster theme="dark" position="bottom-right" richColors />
         <Routes>
           <Route 
             path="/" 

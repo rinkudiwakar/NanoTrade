@@ -10,52 +10,63 @@ export const OrderBook = React.memo(() => {
   const displayAsks = asks.slice(0, 15).reverse(); // highest to lowest
   const displayBids = bids.slice(0, 15); // highest to lowest
   
-  const maxVolume = Math.max(
-    ...bids.map(b => b.quantity), 
-    ...asks.map(a => a.quantity),
-    1
-  );
+  // Calculate cumulative totals for depth bars
+  let askTotal = 0;
+  const asksWithTotal = displayAsks.map(ask => {
+    askTotal += ask.quantity;
+    return { ...ask, total: askTotal };
+  });
+
+  let bidTotal = 0;
+  const bidsWithTotal = displayBids.map(bid => {
+    bidTotal += bid.quantity;
+    return { ...bid, total: bidTotal };
+  });
+
+  const maxTotal = Math.max(askTotal, bidTotal, 1);
 
   return (
-    <div className="flex h-full flex-col border-l bg-card text-xs">
-      <div className="border-b p-3 font-semibold text-muted-foreground flex justify-between">
+    <div className="flex h-full flex-col bg-card text-xs font-mono">
+      <div className="p-2 font-semibold text-muted-foreground flex justify-between font-sans text-sm">
         <span>Order Book</span>
       </div>
       <div className="flex justify-between px-3 py-1 text-[10px] text-muted-foreground">
-        <span>Price (INR)</span>
-        <span>Qty</span>
+        <span className="w-1/3 text-left">Price(INR)</span>
+        <span className="w-1/3 text-right">Amount</span>
+        <span className="w-1/3 text-right">Total</span>
       </div>
       
       {/* Asks (Red) */}
       <div className="flex flex-1 flex-col justify-end overflow-hidden">
-        {displayAsks.map((ask, i) => {
-          const priceInr = ask.price;
-          const depthPct = (ask.quantity / maxVolume) * 100;
+        {asksWithTotal.map((ask, i) => {
+          const depthPct = (ask.total / maxTotal) * 100;
           return (
-            <div key={`ask-${i}`} className="relative flex justify-between px-3 py-0.5 hover:bg-accent/50 cursor-pointer">
-              <div className="absolute right-0 top-0 h-full bg-red-500/10" style={{ width: `${depthPct}%` }} />
-              <span className="text-red-500 z-10">{priceInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-              <span className="z-10 text-foreground">{ask.quantity.toFixed(4)}</span>
+            <div key={`ask-${i}`} className="relative flex justify-between px-3 py-[2px] hover:bg-accent/50 cursor-pointer">
+              <div className="absolute right-0 top-0 h-full bg-[#F6465D]/10" style={{ width: `${depthPct}%` }} />
+              <span className="w-1/3 text-left text-[#F6465D] z-10">{ask.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className="w-1/3 text-right z-10 text-[#EAECEF]">{ask.quantity.toFixed(4)}</span>
+              <span className="w-1/3 text-right z-10 text-[#848E9C]">{ask.total.toFixed(4)}</span>
             </div>
           );
         })}
       </div>
       
       {/* Spread / Current Price */}
-      <div className="flex items-center justify-center border-y py-2 font-semibold">
-        <span className="text-sm">₹{(priceUsd * conversionRate).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+      <div className="flex items-center px-3 py-2 font-semibold text-lg">
+        <span className="text-[#0ECB81]">₹{(priceUsd * conversionRate).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+        <span className="ml-2 text-sm text-muted-foreground line-through decoration-muted-foreground/50">${priceUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
       </div>
       
       {/* Bids (Green) */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {displayBids.map((bid, i) => {
-          const priceInr = bid.price;
-          const depthPct = (bid.quantity / maxVolume) * 100;
+        {bidsWithTotal.map((bid, i) => {
+          const depthPct = (bid.total / maxTotal) * 100;
           return (
-            <div key={`bid-${i}`} className="relative flex justify-between px-3 py-0.5 hover:bg-accent/50 cursor-pointer">
-              <div className="absolute right-0 top-0 h-full bg-green-500/10" style={{ width: `${depthPct}%` }} />
-              <span className="text-green-500 z-10">{priceInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-              <span className="z-10 text-foreground">{bid.quantity.toFixed(4)}</span>
+            <div key={`bid-${i}`} className="relative flex justify-between px-3 py-[2px] hover:bg-accent/50 cursor-pointer">
+              <div className="absolute right-0 top-0 h-full bg-[#0ECB81]/10" style={{ width: `${depthPct}%` }} />
+              <span className="w-1/3 text-left text-[#0ECB81] z-10">{bid.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className="w-1/3 text-right z-10 text-[#EAECEF]">{bid.quantity.toFixed(4)}</span>
+              <span className="w-1/3 text-right z-10 text-[#848E9C]">{bid.total.toFixed(4)}</span>
             </div>
           );
         })}

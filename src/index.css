@@ -88,25 +88,25 @@
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
+    --background: 216 21% 5%;
+    --foreground: 0 0% 90%;
+    --card: 216 14% 11%;
+    --card-foreground: 0 0% 90%;
+    --popover: 216 14% 11%;
+    --popover-foreground: 0 0% 90%;
+    --primary: 47 100% 50%; /* Binance Yellowish */
+    --primary-foreground: 216 21% 5%;
+    --secondary: 216 14% 18%;
+    --secondary-foreground: 0 0% 90%;
+    --muted: 216 14% 18%;
+    --muted-foreground: 215 14% 55%;
+    --accent: 216 14% 18%;
     --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 351 90% 62%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --border: 216 14% 18%;
+    --input: 216 14% 18%;
+    --ring: 47 100% 50%;
   }
 }
 
@@ -117,4 +117,26 @@
   body {
     @apply bg-background text-foreground;
   }
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Custom Scrollbar for a premium feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
 }

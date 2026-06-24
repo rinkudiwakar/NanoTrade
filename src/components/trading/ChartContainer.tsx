@@ -1,42 +1,51 @@
 import { useEffect, useRef } from 'react';
-import { createChart, ColorType, CandlestickSeries } from 'lightweight-charts';
+import { createChart, ColorType, CandlestickSeries, IChartApi, ISeriesApi } from 'lightweight-charts';
 import { useMarketStore } from '@/store/marketStore';
 
 export function ChartContainer() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<IChartApi | null>(null);
+  const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+  
   const currentSymbol = useMarketStore((state) => state.currentSymbol);
 
+  // Initialize chart
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
     const chart = createChart(chartContainerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: '#d1d5db',
+        textColor: '#848E9C', // Binance text color
       },
       grid: {
-        vertLines: { color: '#374151', style: 1 },
-        horzLines: { color: '#374151', style: 1 },
+        vertLines: { color: '#2B3139', style: 1 },
+        horzLines: { color: '#2B3139', style: 1 },
+      },
+      timeScale: {
+        timeVisible: true,
+        secondsVisible: false,
       },
       width: chartContainerRef.current.clientWidth,
       height: chartContainerRef.current.clientHeight,
     });
 
     const candlestickSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#22c55e',
-      downColor: '#ef4444',
+      upColor: '#0ECB81', // Binance Green
+      downColor: '#F6465D', // Binance Red
       borderVisible: false,
-      wickUpColor: '#22c55e',
-      wickDownColor: '#ef4444',
+      wickUpColor: '#0ECB81',
+      wickDownColor: '#F6465D',
     });
 
-    // Mock initial data (since there's no historical API specified yet)
-    candlestickSeries.setData([
-      { time: '2026-06-20', open: 60000, high: 61000, low: 59000, close: 60500 },
-      { time: '2026-06-21', open: 60500, high: 62000, low: 60000, close: 61500 },
-      { time: '2026-06-22', open: 61500, high: 61800, low: 60500, close: 60800 },
-      { time: '2026-06-23', open: 60800, high: 63000, low: 60800, close: 62500 },
-    ]);
+    chartRef.current = chart;
+    seriesRef.current = candlestickSeries;
+    
+    // Set initial data
+    const initialCandles = useMarketStore.getState().candles;
+    if (initialCandles.length > 0) {
+      candlestickSeries.setData(initialCandles as any);
+    }
 
     const handleResize = () => {
       chart.applyOptions({
@@ -47,11 +56,30 @@ export function ChartContainer() {
 
     window.addEventListener('resize', handleResize);
 
+    // Subscribe to live updates without causing React re-renders
+    const unsubscribe = useMarketStore.subscribe((state, prevState) => {
+      if (state.candles !== prevState.candles && seriesRef.current) {
+        const lastCandle = state.candles[state.candles.length - 1];
+        if (lastCandle) {
+          seriesRef.current.update(lastCandle as any);
+        }
+      }
+    });
+
     return () => {
+      unsubscribe();
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
   }, [currentSymbol]);
 
-  return <div ref={chartContainerRef} className="h-full w-full bg-card" />;
+  return (
+    <div className="h-full w-full flex flex-col bg-background">
+      <div className="flex items-center space-x-4 p-3 border-b border-border bg-card">
+        <h2 className="text-xl font-bold">{currentSymbol.replace('_', '/')}</h2>
+        <div className="text-sm text-muted-foreground">1m timeframe</div>
+      </div>
+      <div ref={chartContainerRef} className="flex-1 w-full bg-[#0b0e11]" />
+    </div>
+  );
 }

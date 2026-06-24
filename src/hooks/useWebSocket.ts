@@ -37,9 +37,21 @@ export function useWebSocket() {
           } else if (data.type === 'orderbook_update' || data.event === 'orderbook_update' || data.type === 'orderbook') {
             const ob = data.orderbook || data.data || data;
             if (ob && ob.bids) setOrderbook(ob.bids, ob.asks);
-          } else if (data.type === 'trade_execution' || data.event === 'trade_execution' || data.type === 'trade') {
+          } else if (data.type === 'trade_execution' || data.event === 'trade_execution' || data.type === 'trade' || data.type === 'market_trade') {
             const trade = data.trade || data.data || data;
             if (trade) addTrades(Array.isArray(trade) ? trade : [trade]);
+          } else if (data.type === 'kline') {
+            const kline = data.data;
+            if (kline && kline.start) {
+              useMarketStore.getState().updateCandle({
+                time: Math.floor(kline.start / 1000), // convert ms to s
+                open: kline.open,
+                high: kline.high,
+                low: kline.low,
+                close: kline.close,
+                volume: kline.volume
+              });
+            }
           }
         } catch (error) {
           console.error("Failed to parse WS message", error);
