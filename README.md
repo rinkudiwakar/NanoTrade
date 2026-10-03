@@ -86,7 +86,7 @@ flowchart TB
     WS_HOOK -->|Dispatches Price/Trades/Depth| M_STORE
     WS_ENDPOINT -->|Stream| WS_HOOK
     ORDERFORM -->|Place Order Request| AXIOS
-    PORTFOLIO -->|Fetch Margin & History| AXIOS
+    PORTFOLIO -->|Fetch Margin and History| AXIOS
     AXIOS -->|Authenticated REST Requests| REST_API
 ```
 

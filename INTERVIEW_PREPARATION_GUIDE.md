@@ -122,15 +122,17 @@ flowchart TB
     ORDER_API -->|4. Insert Status=QUEUED| ORDERS
     ORDER_API -->|5. XADD Order Payload| STREAM
 
-    STREAM --> CG --> DAEMON
-    DAEMON -->|6. Call via Pybind11| PYBIND --> CPP_ENGINE
-    CPP_ENGINE -->|7. Match Orders & Return Trades| DAEMON
+    STREAM --> CG
+    CG --> DAEMON
+    DAEMON -->|6. Call via Pybind11| PYBIND
+    PYBIND --> CPP_ENGINE
+    CPP_ENGINE -->|7. Match Orders and Return Trades| DAEMON
     DAEMON -->|8. Execute Atomic RPC| RPC
     RPC --> PROFILES
     RPC --> TRADES
     RPC --> PORTFOLIO
-    DAEMON -->|9. Update Maker & Taker Status| ORDERS
-    DAEMON -->|10. Publish Trade & Book Depth| REDIS_PUBSUB
+    DAEMON -->|9. Update Maker and Taker Status| ORDERS
+    DAEMON -->|10. Publish Trade and Book Depth| REDIS_PUBSUB
 
     RPUB --> WS_MGR
     REDIS_PUBSUB --> WS_MGR
@@ -208,8 +210,12 @@ The web server (`python/app/main.py`) exposes high-performance asynchronous endp
    - Prevents race conditions where a user rapidly submits parallel orders to overspend their margin.
 3. **Pre-Execution Margin Validation (`portfolio_service.py`):**
    - Real-time calculation:
-     $$\text{Available Margin} = \text{Wallet Balance} - \sum (\text{Pending Limit Buy Orders} \times \text{Price})$$
-     $$\text{Available BTC} = \text{Portfolio Quantity} - \sum (\text{Pending Limit Sell Orders})$$
+     ```math
+     \text{Available Margin} = \text{Wallet Balance} - \sum (\text{Pending Limit Buy Orders} \times \text{Price})
+     ```
+     ```math
+     \text{Available BTC} = \text{Portfolio Quantity} - \sum (\text{Pending Limit Sell Orders})
+     ```
    - Rejects orders with `400 Bad Request` prior to enqueueing.
 
 ---
@@ -283,7 +289,9 @@ $$ language plpgsql security definer;
 ```
 
 #### Mathematical Proof of Rolling Average Price:
-$$\text{AvgPrice}_{\text{new}} = \frac{(\text{Qty}_{\text{old}} \times \text{AvgPrice}_{\text{old}}) + (\text{Qty}_{\text{bought}} \times \text{Price}_{\text{bought}})}{\text{Qty}_{\text{old}} + \text{Qty}_{\text{bought}}}$$
+```math
+\text{AvgPrice}_{\text{new}} = \frac{(\text{Qty}_{\text{old}} \times \text{AvgPrice}_{\text{old}}) + (\text{Qty}_{\text{bought}} \times \text{Price}_{\text{bought}})}{\text{Qty}_{\text{old}} + \text{Qty}_{\text{bought}}}
+```
 
 ---
 
